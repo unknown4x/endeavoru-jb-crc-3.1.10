@@ -75,6 +75,9 @@ struct work_struct htc_suspend_resume_work;
    to be in ascending order */
 static struct cpufreq_frequency_table *freq_table;
 
+/* frequency cap used during suspend (screen off)*/
+static unsigned int suspend_cap_freq = CAP_CPU_FREQ_MAX;
+
 static struct clk *cpu_clk;
 static struct clk *cpu_g_clk;
 static struct clk *emc_clk;
