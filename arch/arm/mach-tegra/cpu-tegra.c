@@ -2453,8 +2453,8 @@ static void ril_suspend_resume_worker(struct work_struct *w)
   pm_qos_update_request(&cap_cpu_freq_req, (s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
 
   pr_info("ril_suspend_resume_worker: boost cpu freq by RIL\n");
-  pm_qos_update_request(&boost_cpu_freq_req, (s32)tegra_get_suspend_boost_freq());
-  tegra_update_cpu_speed(tegra_get_suspend_boost_freq());
+  pm_qos_update_request(&boost_cpu_freq_req, 475000);
+  tegra_update_cpu_speed(475000);
 }
 
 
