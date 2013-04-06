@@ -105,6 +105,8 @@ static unsigned int use_suspend_delay = 1;
 static void tegra_cancel_delayed_suspend_work(void);
 #endif
 
+struct work_struct ril_suspend_resume_work;
+
 static spinlock_t user_cap_lock;
 
 #ifdef CONFIG_TEGRA3_VARIANT_CPU_OVERCLOCK
@@ -2372,15 +2374,12 @@ static int ril_boost = 0;
 
 static int ril_boost_set(const char *arg, const struct kernel_param *kp)
 {
-	pr_info("ril_boost not supported\n");
-	return 0;
-	//return schedule_work(&htc_suspend_resume_work);
+	return schedule_work(&ril_suspend_resume_work);
 }
 
 static int ril_boost_get(char *buffer, const struct kernel_param *kp)
 {
-	return 0;
-	//return param_get_uint(buffer, kp);
+	return param_get_uint(buffer, kp);
 }
 
 
@@ -2443,6 +2442,22 @@ static struct kernel_param_ops enable_oc_ops = {
 module_param_cb(enable_oc, &enable_oc_ops, &enable_oc, 0644);
 #endif
 
+static void ril_suspend_resume_worker(struct work_struct *w)
+{
+#ifdef CONFIG_TEGRA_CPUQUIET
+  // disable LP mode asap
+  tegra_cpuquiet_force_gmode();
+#endif
+
+  pr_info("ril_suspend_resume_worker: clean cpu cap by RIL\n");
+  pm_qos_update_request(&cap_cpu_freq_req, (s32)PM_QOS_CPU_FREQ_MAX_DEFAULT_VALUE);
+
+  pr_info("ril_suspend_resume_worker: boost cpu freq by RIL\n");
+  pm_qos_update_request(&boost_cpu_freq_req, (s32)tegra_get_suspend_boost_freq());
+  tegra_update_cpu_speed(tegra_get_suspend_boost_freq());
+}
+
+
 static int __init tegra_cpufreq_init(void)
 {
 	int ret = 0;
@@ -2464,10 +2479,8 @@ static int __init tegra_cpufreq_init(void)
 
 	freq_table = table_data->freq_table;
 	tegra_cpu_edp_init(false);
-
-#if 0
-	INIT_WORK(&htc_suspend_resume_work, htc_suspend_resume_worker);
-#endif
+	
+	INIT_WORK(&ril_suspend_resume_work, ril_suspend_resume_worker);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	pm_qos_add_request(&boost_cpu_freq_req, PM_QOS_CPU_FREQ_MIN, (s32)PM_QOS_CPU_FREQ_MIN_DEFAULT_VALUE);
