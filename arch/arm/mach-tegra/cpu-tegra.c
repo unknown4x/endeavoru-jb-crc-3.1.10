@@ -2454,7 +2454,7 @@ static void ril_suspend_resume_worker(struct work_struct *w)
 
   pr_info("ril_suspend_resume_worker: boost cpu freq by RIL\n");
   pm_qos_update_request(&boost_cpu_freq_req, 51000);
-  tegra_update_cpu_speed(475000);
+  tegra_update_cpu_speed(51000);
 }
 
 
